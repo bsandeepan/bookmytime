@@ -1,6 +1,6 @@
 from typing import DefaultDict
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from app.dtos import Event, Schedule, DayWiseInfo,AvailabilityRule, UserSettings
 from app.storage.storage import DataStore
@@ -27,6 +27,7 @@ class SchedulingSvc():
             UserId = settings.UserId,
             Duration=settings.Duration,
             Timezone=settings.Timezone,
+            UpdatedAt=datetime.now(tz=timezone.utc),
             AvailabilityRules=[rule.model_dump() for rule in settings.AvailabilityRules]
         )
 
@@ -151,8 +152,22 @@ class SchedulingSvc():
                 daily_info.Slots = slots
         
         return user_schedule
+    
+    def book_event(self, event: Event) -> None:
+        attendee_settings = self.db.fetch_user_settings_by_id(event.AttendeeId)
+        attendee_tz_info = ZoneInfo(attendee_settings.Timezone)
 
-                
+        if event.StartTime.utcoffset() != event.StartTime.replace(tzinfo=attendee_tz_info).utcoffset():
+            raise ValueError("Starttime does not match with your time zone")
 
-
-        
+        self.db.create_new_event(models.Events(
+            EventId=event.EventId,
+            OrganizerId=event.OrganizerId,
+            AttendeeId=event.AttendeeId,
+            StartTime=event.StartTime.astimezone(timezone.utc),
+            Duration=event.Duration,
+            CreatedAt=datetime.now(tz=timezone.utc),
+            UpdatedAt=datetime.now(tz=timezone.utc),
+            Notes=event.Notes,
+            Status=models.Status.CREATED,
+        ))

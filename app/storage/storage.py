@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 from sqlalchemy import create_engine, select, and_, or_
 from sqlalchemy.orm import Session
 from app.config import settings 
@@ -34,7 +33,7 @@ class DataStore():
             settings.Duration = new_settings.Duration
             settings.AvailabilityRules = new_settings.AvailabilityRules
             settings.Timezone = new_settings.Timezone
-            settings.UpdatedAt = datetime.now(tz=timezone.utc)
+            settings.UpdatedAt = new_settings.UpdatedAt
 
             session.commit()
 
@@ -49,4 +48,8 @@ class DataStore():
             rows = session.execute(stmt).all()
 
             return [row[0] for row in rows]
-        
+    
+    def create_new_event(self, event: Events) -> None:
+        with Session(self.engine) as session:
+            session.add(event)
+            session.commit()

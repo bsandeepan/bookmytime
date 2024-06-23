@@ -46,3 +46,16 @@ def get_overlap_with_user_schedule(user_id: userIdPathType, attendee_id: userIdP
     overlapping_schedule = svc.prepare_user_schedule_overlapping(user_id, attendee_id)
 
     return overlapping_schedule
+
+@app.post("/User/{user_id}/Schedule/Event", status_code=201)
+def create_new_meeting_event(user_id: userIdPathType, event: dtos.Event) -> None:
+    if user_id != event.OrganizerId:
+        # user is not adding event to organizer's schedule.
+        raise HTTPException(status_code=401, detail="Organizer id mismatch")
+    
+    try:
+        svc.book_event(event)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    return None
