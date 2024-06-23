@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import create_engine, select, and_, or_, update
+from sqlalchemy import create_engine, select, and_, or_
 from sqlalchemy.orm import Session
 from app.config import settings 
 from app.storage.models import UserSettings, Events, Status

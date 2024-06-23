@@ -26,7 +26,7 @@ class UserSettings(Base):
     
     def get_availability_rule(self, weekday: str, default=None) -> AvailabilityRule | None:
         for rule in self.AvailabilityRules:
-            rule = AvailabilityRule.model_validate_json(rule)
+            rule = AvailabilityRule.model_validate(rule)
             if rule.Day == weekday.lower():
                 return rule
         
