@@ -1,6 +1,5 @@
 import enum
 from datetime import datetime
-from typing import List
 from pydantic import BaseModel
 from sqlalchemy import SMALLINT, String, DATETIME, JSON, UUID, TEXT, Enum, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped, relationship
@@ -10,7 +9,7 @@ class Base(DeclarativeBase):
 
 class AvailabilityRule(BaseModel):
     Day: str
-    Hours: List[List[str] | None]
+    Hours: list[tuple[str, str] | None]
 
 class UserSettings(Base):
     __tablename__ = "UserSettings"
@@ -20,14 +19,14 @@ class UserSettings(Base):
     Timezone: Mapped[str] = mapped_column(String(40))
     MaxCalenderDays: Mapped[int] = mapped_column(SMALLINT)
     UpdatedAt: Mapped[datetime] = mapped_column(DATETIME)
-    AvailabilityRules: Mapped[List[AvailabilityRule]] = mapped_column(JSON)
+    AvailabilityRules: Mapped[list[AvailabilityRule]] = mapped_column(JSON)
 
     def __repr__(self) -> str:
         return f"<{self.__tablename__} (id={self.UserId}, Timezone={self.Timezone})>"
     
     def get_availability_rule(self, weekday: str, default=None) -> AvailabilityRule | None:
         for rule in self.AvailabilityRules:
-            rule = AvailabilityRule.model_validate(rule)
+            rule = AvailabilityRule.model_validate_json(rule)
             if rule.Day == weekday.lower():
                 return rule
         

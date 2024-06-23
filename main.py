@@ -1,34 +1,48 @@
-from typing import List
-from fastapi import FastAPI
+from fastapi import FastAPI, Path, HTTPException
+from typing import Annotated
 
 from app.storage.storage import DataStore
 from app.storage import models
 from app.service.schedule import SchedulingSvc
 from app import dtos
+from app.common import UserIdRx
 
 app = FastAPI()
 db = DataStore()
 svc = SchedulingSvc()
+
+userIdPathType = Annotated[str, Path(title="User Id", pattern=UserIdRx)]
 
 @app.get("/")
 def read_root():
     return {"Hello": db.sample()}
 
 @app.get("/User/{user_id}/Settings")
-def get_user_settings(user_id: str):
-    # todo: add validation check for userid
-    record: models.UserSettings = db.fetch_user_settings_by_id(user_id)
+def get_user_settings(user_id: userIdPathType):
+    res = svc.fetch_user_settings(user_id)
 
-    return dtos.UserSettings.model_validate(record)
+    if res is None:
+        raise HTTPException(status_code=404)
+    
+    return res
+
+@app.put("/User/{user_id}/Settings", status_code=204)
+def update_user_settings(user_id: userIdPathType, settings: dtos.UserSettings) -> None:
+    if user_id != settings.UserId:
+        # if user is updating anothers settings, take action.
+        raise HTTPException(status_code=401, detail="User id mismatch")
+    
+    svc.update_user_settings(settings)
+    return None
 
 @app.get("/User/{user_id}/Schedule")
-def get_user_schedule(user_id: str, to_tz: str = "") -> dtos.Schedule:
+def get_user_schedule(user_id: userIdPathType, to_tz: str = "") -> dtos.Schedule:
     schedule = svc.prepare_user_schedule(user_id, to_tz)
 
     return schedule
 
 @app.get("/User/{user_id}/Schedule/Overlap/{attendee_id}")
-def get_overlap_with_user_schedule(user_id: str, attendee_id: str) -> dtos.Schedule:
+def get_overlap_with_user_schedule(user_id: userIdPathType, attendee_id: userIdPathType) -> dtos.Schedule:
     overlapping_schedule = svc.prepare_user_schedule_overlapping(user_id, attendee_id)
 
     return overlapping_schedule

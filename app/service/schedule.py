@@ -1,9 +1,11 @@
-from typing import List, DefaultDict
+from typing import DefaultDict
+from json import dumps
 from collections import defaultdict
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
-from app.dtos import Event, Schedule, DayWiseInfo,AvailabilityRule
-from app.storage.storage import DataStore, UserSettings
+from app.dtos import Event, Schedule, DayWiseInfo,AvailabilityRule, UserSettings
+from app.storage.storage import DataStore
+from app.storage import models
 
 class SchedulingSvc():
     def __init__(self) -> None:
@@ -15,8 +17,26 @@ class SchedulingSvc():
             assert end > start
         
         return end - start
+
+    def fetch_user_settings(self, user_id: str) -> UserSettings | None:
+        record: models.UserSettings = self.db.fetch_user_settings_by_id(user_id)
+
+        return UserSettings.model_validate(record) if record else None
     
-    def prepare_events_dict(self, user_id: str, user_tz: str) -> DefaultDict[str, List[Event]]:
+    def update_user_settings(self, settings: UserSettings) -> None:
+        new_settings = models.UserSettings(
+            UserId = settings.UserId,
+            Duration=settings.Duration,
+            Timezone=settings.Timezone,
+            AvailabilityRules=[rule.model_dump() for rule in settings.AvailabilityRules]
+        )
+
+        self.db.update_user_settings(new_settings)
+
+        return None
+        
+    
+    def prepare_events_dict(self, user_id: str, user_tz: str) -> DefaultDict[str, list[Event]]:
         event_orms = self.db.fetch_events_for_user(user_id)
         tz_info = ZoneInfo(user_tz)
         events = defaultdict(list)
@@ -34,9 +54,9 @@ class SchedulingSvc():
             user_tz: str, 
             target_tz: str, 
             availability: AvailabilityRule | None, 
-            booked_slots: List[str], 
+            booked_slots: list[str], 
             today: datetime
-        ) -> List[str]:
+        ) -> list[str]:
         slots = []
         to_tz = ZoneInfo(target_tz)
         from_tz = ZoneInfo(user_tz)
@@ -66,7 +86,7 @@ class SchedulingSvc():
 
         return slots
     
-    def prepare_day_wise_info_list(self, events:  DefaultDict[str, List[Event]], settings: UserSettings, to_tz: str):
+    def prepare_day_wise_info_list(self, events:  DefaultDict[str, list[Event]], settings: models.UserSettings, to_tz: str):
         day_wise_info_list = []
         for i in range(settings.MaxCalenderDays):
             today = datetime.now() + timedelta(days=i)
