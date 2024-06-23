@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict, Field, UUID4
-from datetime import datetime
+from datetime import datetime, date
 from typing import List
 
 class AvailabilityRule(BaseModel):
@@ -27,7 +27,7 @@ class Event(BaseModel):
     UpdatedAt: datetime = Field(..., exclude=True)
 
 class DayWiseInfo(BaseModel):
-    Date: str
+    Date: date
     Slots: List[str] | None
     Events: List[Event] | None
 

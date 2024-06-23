@@ -29,4 +29,6 @@ def get_user_schedule(user_id: str, to_tz: str = "") -> dtos.Schedule:
 
 @app.get("/User/{user_id}/Schedule/Overlap/{attendee_id}")
 def get_overlap_with_user_schedule(user_id: str, attendee_id: str) -> dtos.Schedule:
-    pass
+    overlapping_schedule = svc.prepare_user_schedule_overlapping(user_id, attendee_id)
+
+    return overlapping_schedule

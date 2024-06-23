@@ -77,7 +77,7 @@ class SchedulingSvc():
             slots = self.prepare_slots(settings.Duration, settings.Timezone, to_tz, availability, booked_slots, today)
             
             day_wise_info_list.append(DayWiseInfo(
-                Date=today_date,
+                Date=today.date(),
                 Slots=slots,
                 Events=events[today_date]
             ))
@@ -99,6 +99,41 @@ class SchedulingSvc():
         )
 
         return schedule
+    
+    def prepare_user_schedule_overlapping(self, user_id: str, attendee_id: str):
+        user_settings = self.db.fetch_user_settings_by_id(user_id)
+        attendee_settings = self.db.fetch_user_settings_by_id(attendee_id)
+        to_tz = attendee_settings.Timezone
+        to_tz_info = ZoneInfo(to_tz)
+
+        events = self.prepare_events_dict(user_id, to_tz)
+
+        user_schedule = Schedule(
+            UserId=user_id,
+            Duration=user_settings.Duration,
+            Timezone=to_tz,
+            Schedule=self.prepare_day_wise_info_list(events, user_settings, to_tz)
+        )
+
+        for daily_info in user_schedule.Schedule:
+            weekday = daily_info.Date.strftime("%A").lower()
+            related_rule = attendee_settings.get_availability_rule(weekday)
+            slots = []
+            if not related_rule:
+                daily_info.Slots = slots,
+                daily_info.Events = [],
+            else:
+            # does slot overlap with rule timeframe?
+            # for each timeframe, start <= slot < end
+                for timeframe in related_rule.Hours:
+                    start, end = [datetime.strptime(t, '%H:%M').replace(tzinfo=to_tz_info) for t in timeframe]
+                    slots.extend(filter(lambda x: start <= datetime.strptime(x, '%H:%M').replace(tzinfo=to_tz_info) < end, daily_info.Slots))
+            
+                daily_info.Slots = slots
+        
+        return user_schedule
+
+                
 
 
         
