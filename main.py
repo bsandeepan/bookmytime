@@ -22,7 +22,11 @@ def get_user_settings(user_id: str):
     return dtos.UserSettings.model_validate(record)
 
 @app.get("/User/{user_id}/Schedule")
-def get_user_schedule(user_id: str) -> dtos.Schedule:
-    schedule = svc.prepare_user_schedule(user_id)
+def get_user_schedule(user_id: str, to_tz: str = "") -> dtos.Schedule:
+    schedule = svc.prepare_user_schedule(user_id, to_tz)
 
     return schedule
+
+@app.get("/User/{user_id}/Schedule/Overlap/{attendee_id}")
+def get_overlap_with_user_schedule(user_id: str, attendee_id: str) -> dtos.Schedule:
+    pass

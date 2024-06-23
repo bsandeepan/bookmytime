@@ -24,6 +24,14 @@ class UserSettings(Base):
 
     def __repr__(self) -> str:
         return f"<{self.__tablename__} (id={self.UserId}, Timezone={self.Timezone})>"
+    
+    def get_availability_rule(self, weekday: str, default=None) -> AvailabilityRule | None:
+        for rule in self.AvailabilityRules:
+            rule = AvailabilityRule.model_validate(rule)
+            if rule.Day == weekday.lower():
+                return rule
+        
+        return default
 
 class Status(enum.Enum):
     CREATED = "CREATED"

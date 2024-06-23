@@ -1,10 +1,10 @@
 from pydantic import BaseModel, ConfigDict, Field, UUID4
-from datetime import datetime,date
+from datetime import datetime
 from typing import List
 
 class AvailabilityRule(BaseModel):
     Day: str
-    Hours: List[List[str] | None]
+    Hours: List[List[str]]
 
 class UserSettings(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -27,7 +27,7 @@ class Event(BaseModel):
     UpdatedAt: datetime = Field(..., exclude=True)
 
 class DayWiseInfo(BaseModel):
-    Date: date
+    Date: str
     Slots: List[str] | None
     Events: List[Event] | None
 

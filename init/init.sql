@@ -49,4 +49,4 @@ INSERT INTO public."UserSettings"("UserId", "Timezone", "UpdatedAt", "Availabili
 			('US00000002', 'CET', '2024-06-14 11:34:17.146', '[{"Day":"monday","Hours":[["08:00","11:00"],["15:30","17:00"],["19:00","21:00"]]},{"Day":"tuesday","Hours":[["08:00","13:00"],["15:30","16:00"]]},{"Day":"wednesday","Hours":[["08:00","18:00"]]},{"Day":"friday","Hours":[["08:00","20:00"]]}]');
 -- Insert pre-existing events
 INSERT INTO public."Events"("EventId", "OrganizerId", "AttendeeId", "StartTime", "Duration", "CreatedAt", "UpdatedAt", "Notes", "Status")
-	VALUES (gen_random_uuid(), 'US00000001', 'US00000002', '2024-06-25 07:00:00.000', 60, '2024-06-14 14:02:14.345', '2024-06-14 14:02:14.345', 'this is a test event', 'CREATED');
+	VALUES (gen_random_uuid(), 'US00000001', 'US00000002', '2024-06-25 06:30:00.000', 60, '2024-06-14 14:02:14.345', '2024-06-14 14:02:14.345', 'this is a test event', 'CREATED');
